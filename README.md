@@ -2,6 +2,8 @@
 
 一个基于 [Protocol 模板](https://tailwindcss.com/plus) 构建的单词记忆卡片 API 文档网站，使用 [Tailwind CSS](https://tailwindcss.com) 和 [Next.js](https://nextjs.org) 开发。
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFiftonb%2Fwordapi)
+
 ## 项目简介
 
 本项目是 [api.keykey.cc](https://api.keykey.cc) 单词记忆卡片 API 的官方文档网站，提供：
@@ -14,13 +16,19 @@
 
 ## 快速开始
 
-### 安装依赖
+### 方式 1: 一键部署到 Vercel（推荐）
+
+点击上方的 "Deploy with Vercel" 按钮，即可快速将项目部署到 Vercel 平台。Vercel 会自动完成构建和部署流程。
+
+### 方式 2: 本地开发
+
+#### 安装依赖
 
 ```bash
 npm install
 ```
 
-### 启动开发服务器
+#### 启动开发服务器
 
 ```bash
 npm run dev
@@ -28,7 +36,7 @@ npm run dev
 
 在浏览器中打开 [http://localhost:3000](http://localhost:3000) 查看网站。
 
-### 构建生产版本
+#### 构建生产版本
 
 ```bash
 npm run build
@@ -107,6 +115,37 @@ src/
 - **文档**: MDX
 - **搜索**: FlexSearch
 - **语言**: TypeScript
+
+## Vercel 部署优化
+
+项目已针对 Vercel 免费版进行优化配置：
+
+### 配置文件
+
+- **`vercel.json`** - 部署配置
+  - 安全头部设置（XSS、CSRF 防护）
+  - 静态资源缓存优化
+  - 自动重定向规则
+
+- **`.vercelignore`** - 构建优化
+  - 排除不必要的文件
+  - 加快部署速度
+  - 减少构建体积
+
+- **`next.config.mjs`** - 构建优化
+  - 启用 SWC 压缩
+  - 图片格式优化（WebP）
+  - 禁用 source map（节省时间）
+  - Gzip 压缩
+  - 字体加载优化
+
+### 性能优化
+
+- 📦 自动代码分割
+- 🖼️ 图片自动优化为 WebP 格式
+- ⚡ 静态资源长期缓存（1年）
+- 🗜️ Gzip/Brotli 自动压缩
+- 🚀 Edge CDN 全球加速
 
 ## 全局搜索
 

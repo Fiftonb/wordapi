@@ -1,0 +1,57 @@
+# 依赖
+node_modules
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 测试
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage
+
+# 本地环境变量
+.env.local
+.env.*.local
+
+# IDE 配置
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 构建输出（Vercel 会自动构建）
+.next
+out
+dist
+build
+
+# TypeScript
+*.tsbuildinfo
+
+# 临时文件
+.cache
+.temp
+tmp
+
+# 文档说明
+清理完成.md
+项目说明.md
+CHANGELOG.md
+
+# Git
+.git
+.gitignore
+

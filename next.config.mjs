@@ -19,6 +19,20 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/**/*': ['./src/app/**/*.mdx'],
   },
+  // 优化生产环境构建
+  compress: true,
+  // 启用图片优化
+  images: {
+    formats: ['image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+  },
+  // 生产环境禁用源码映射（节省构建时间和体积）
+  productionBrowserSourceMaps: false,
+  // 移除 X-Powered-By 头部
+  poweredByHeader: false,
+  // 启用 React 严格模式
+  reactStrictMode: true,
 }
 
 export default withSearch(withMDX(nextConfig))
