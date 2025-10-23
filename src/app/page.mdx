@@ -1,0 +1,48 @@
+import { Guides } from '@/components/Guides'
+import { Resources } from '@/components/Resources'
+import { HeroPattern } from '@/components/HeroPattern'
+import { WordSearch } from '@/components/WordSearch'
+
+export const metadata = {
+  title: '单词记忆卡片 API',
+  description:
+    '一个完全公开的单词记忆卡片查询 API，包含例句、词组、助记技巧等丰富内容。无需认证，开箱即用。',
+}
+
+export const sections = [
+  { title: 'Guides', id: 'guides' },
+  { title: 'Resources', id: 'resources' },
+]
+
+<HeroPattern />
+
+# 单词记忆卡片 API
+
+一个完全公开的单词记忆卡片查询 API，帮助您快速获取单词的详细学习资料。包含例句、词组搭配、助记技巧、词根词缀分析、同义词辨析等丰富内容。ps:暂只支持部分英语，数据还在慢慢增加。{{ className: 'lead' }}
+
+<div className="not-prose my-12">
+  <WordSearch />
+</div>
+
+<div className="not-prose mb-16 flex gap-3">
+  <Button href="/quickstart" arrow="right">
+    快速开始
+  </Button>
+  <Button href="/api-reference" variant="outline">
+    API 文档
+  </Button>
+</div>
+
+## 开始使用
+
+无需认证，直接调用 API 即可获取单词记忆卡片。支持多种语言，每个 IP 每天 500 次免费请求。适合构建学习工具、单词应用或进行数据分析。{{ className: 'lead' }}
+
+<div className="not-prose">
+  <Button href="/quickstart" variant="text" arrow="right">
+    查看快速开始教程
+  </Button>
+</div>
+
+<Guides />
+
+<Resources />

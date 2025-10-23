@@ -1,0 +1,496 @@
+export const metadata = {
+  title: '错误处理',
+  description: '了解 API 可能返回的错误类型以及如何正确处理这些错误。',
+}
+
+# 错误处理
+
+本页面详细说明 API 可能返回的各种错误类型，以及如何在您的应用中正确处理这些错误。{{ className: 'lead' }}
+
+---
+
+## 错误响应格式 {{ id: 'error-format' }}
+
+所有错误响应都遵循统一的格式：
+
+```json {{ title: '错误响应结构' }}
+{
+  "success": false,
+  "error": "错误描述信息",
+  "code": "ERROR_CODE",
+  "message": "详细的错误说明（可选）",
+  "rateLimit": {
+    "remaining": 497,
+    "limit": 500,
+    "reset": "2025-10-24T00:00:00.000Z"
+  }
+}
+```
+
+<Properties>
+  <Property name="success" type="boolean">
+    始终为 `false`，表示请求失败
+  </Property>
+  <Property name="error" type="string">
+    简短的错误描述，适合直接显示给用户
+  </Property>
+  <Property name="code" type="string">
+    错误代码，用于程序判断错误类型
+  </Property>
+  <Property name="message" type="string">
+    详细的错误说明，可能包含解决建议（可选）
+  </Property>
+  <Property name="rateLimit" type="object">
+    Rate Limit 信息（如果适用）
+  </Property>
+</Properties>
+
+---
+
+## 错误类型 {{ id: 'error-types' }}
+
+### NOT_FOUND {{ tag: '404', label: 'Not Found' }}
+
+<Row>
+  <Col>
+    **原因：**单词尚未生成记忆卡片
+
+    当您查询的单词不在数据库中时返回此错误。这可能是因为：
+    - 单词是生僻词或专业术语
+    - 单词拼写错误
+    - 该语言的单词库尚未收录此词
+
+    **解决方案：**
+    - 检查单词拼写是否正确
+    - 尝试其他常用单词
+    - 联系管理员申请添加该单词
+  </Col>
+  <Col sticky>
+    ```json {{ title: '404 示例' }}
+    {
+      "success": false,
+      "error": "该单词暂未生成记忆卡片",
+      "code": "NOT_FOUND",
+      "message": "单词 \"studyology\" (en) 尚未生成记忆卡片。请联系管理员或等待后续更新。",
+      "rateLimit": {
+        "remaining": 497,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+### RATE_LIMIT_EXCEEDED {{ tag: '429', label: 'Too Many Requests' }}
+
+<Row>
+  <Col>
+    **原因：**超过每日请求限额
+
+    每个 IP 地址每天有 500 次免费请求。超过此限额后会返回此错误。
+
+    **解决方案：**
+    - 等待配额重置（每天 UTC 0:00）
+    - 实现客户端缓存，避免重复请求
+    - 申请加入 IP 白名单获得更高配额
+    - 优化请求策略，减少不必要的查询
+
+    **注意：** 429 响应本身不会消耗配额
+  </Col>
+  <Col sticky>
+    ```json {{ title: '429 示例' }}
+    {
+      "success": false,
+      "error": "请求次数已达今日上限",
+      "code": "RATE_LIMIT_EXCEEDED",
+      "rateLimit": {
+        "remaining": 0,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+
+    <Note>
+      查看响应中的 `rateLimit.reset` 字段了解配额何时重置。
+    </Note>
+  </Col>
+</Row>
+
+---
+
+### INVALID_PARAMETER {{ tag: '400', label: 'Bad Request' }}
+
+<Row>
+  <Col>
+    **原因：**请求参数不符合要求
+
+    常见情况：
+    - `word` 参数为空或未提供
+    - `word` 长度超过 100 个字符
+    - `word` 参数类型不正确
+
+    **解决方案：**
+    - 确保 `word` 参数为非空字符串
+    - 限制输入长度在 1-100 个字符
+    - 对用户输入进行前端验证
+  </Col>
+  <Col sticky>
+    ```json {{ title: '400 示例' }}
+    {
+      "success": false,
+      "error": "参数错误：word 参数必须是非空字符串",
+      "code": "INVALID_PARAMETER",
+      "rateLimit": {
+        "remaining": 496,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+### INTERNAL_ERROR {{ tag: '500', label: 'Internal Server Error' }}
+
+<Row>
+  <Col>
+    **原因：**服务器内部错误
+
+    这是服务器端的问题，可能由以下原因引起：
+    - 数据库连接失败
+    - 服务器过载
+    - 程序异常
+
+    **解决方案：**
+    - 等待片刻后重试
+    - 如果问题持续，联系技术支持
+    - 实现重试机制（建议指数退避）
+  </Col>
+  <Col sticky>
+    ```json {{ title: '500 示例' }}
+    {
+      "success": false,
+      "error": "服务器内部错误",
+      "code": "INTERNAL_ERROR"
+    }
+    ```
+
+    <Note>
+      服务器错误通常不包含 `rateLimit` 信息。
+    </Note>
+  </Col>
+</Row>
+
+---
+
+### NETWORK_ERROR {{ tag: 'CLIENT', label: 'Network Error' }}
+
+<Row>
+  <Col>
+    **原因：**网络连接失败
+
+    这是客户端的网络问题：
+    - 无法连接到服务器
+    - 请求超时
+    - DNS 解析失败
+
+    **解决方案：**
+    - 检查网络连接
+    - 检查防火墙设置
+    - 验证 API 地址是否正确
+    - 实现超时和重试机制
+  </Col>
+  <Col sticky>
+    ```js {{ title: '客户端错误示例' }}
+    try {
+      const response = await fetch(apiUrl)
+      const data = await response.json()
+    } catch (error) {
+      // 网络错误
+      console.error('网络请求失败:', error)
+      return {
+        success: false,
+        error: '网络连接失败',
+        code: 'NETWORK_ERROR'
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+## 错误处理最佳实践 {{ id: 'best-practices' }}
+
+### 1. 根据错误码处理
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+async function handleWordQuery(word) {
+  try {
+    const response = await fetch(
+      `https://api.keykey.cc/api/public/memory-card?word=${word}`
+    )
+    const data = await response.json()
+    
+    if (!data.success) {
+      switch (data.code) {
+        case 'NOT_FOUND':
+          showMessage('单词未收录，请尝试其他单词')
+          break
+        
+        case 'RATE_LIMIT_EXCEEDED':
+          const resetTime = new Date(data.rateLimit.reset)
+          showMessage(`请求次数已用完，${resetTime.toLocaleString()} 后重置`)
+          break
+        
+        case 'INVALID_PARAMETER':
+          showMessage('请输入有效的单词')
+          break
+        
+        case 'INTERNAL_ERROR':
+          showMessage('服务器错误，请稍后重试')
+          setTimeout(() => handleWordQuery(word), 3000) // 3秒后重试
+          break
+        
+        default:
+          showMessage('发生未知错误')
+      }
+      return null
+    }
+    
+    return data.data
+  } catch (error) {
+    showMessage('网络连接失败，请检查网络')
+    return null
+  }
+}
+```
+
+```python {{ title: 'Python' }}
+import requests
+import time
+from datetime import datetime
+
+def handle_word_query(word: str):
+    try:
+        response = requests.get(
+            'https://api.keykey.cc/api/public/memory-card',
+            params={'word': word},
+            timeout=10
+        )
+        data = response.json()
+        
+        if not data['success']:
+            code = data.get('code')
+            
+            if code == 'NOT_FOUND':
+                print('单词未收录，请尝试其他单词')
+            
+            elif code == 'RATE_LIMIT_EXCEEDED':
+                reset_time = datetime.fromisoformat(
+                    data['rateLimit']['reset'].replace('Z', '+00:00')
+                )
+                print(f'请求次数已用完，{reset_time} 后重置')
+            
+            elif code == 'INVALID_PARAMETER':
+                print('请输入有效的单词')
+            
+            elif code == 'INTERNAL_ERROR':
+                print('服务器错误，3秒后重试...')
+                time.sleep(3)
+                return handle_word_query(word)  # 重试
+            
+            else:
+                print('发生未知错误')
+            
+            return None
+        
+        return data['data']
+        
+    except requests.RequestException as error:
+        print(f'网络连接失败: {error}')
+        return None
+```
+
+</CodeGroup>
+
+---
+
+### 2. 实现重试机制
+
+对于临时性错误（如网络问题、服务器错误），实现智能重试：
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript 重试' }}
+async function fetchWithRetry(url, maxRetries = 3, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      // 成功或非临时性错误，直接返回
+      if (data.success || 
+          ['NOT_FOUND', 'RATE_LIMIT_EXCEEDED', 'INVALID_PARAMETER'].includes(data.code)) {
+        return data
+      }
+      
+      // 服务器错误，继续重试
+      if (data.code === 'INTERNAL_ERROR' && i < maxRetries - 1) {
+        console.log(`重试 ${i + 1}/${maxRetries}，${delay}ms 后...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        delay *= 2 // 指数退避
+        continue
+      }
+      
+      return data
+    } catch (error) {
+      // 网络错误，继续重试
+      if (i < maxRetries - 1) {
+        console.log(`网络错误，重试 ${i + 1}/${maxRetries}`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        delay *= 2
+      } else {
+        return {
+          success: false,
+          error: '网络连接失败',
+          code: 'NETWORK_ERROR'
+        }
+      }
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+---
+
+### 3. 友好的用户提示
+
+根据不同错误类型提供友好的用户提示：
+
+```jsx {{ title: 'React 错误提示组件' }}
+function ErrorMessage({ error }) {
+  const messages = {
+    NOT_FOUND: {
+      title: '单词未收录',
+      description: '该单词暂时没有记忆卡片，请尝试其他单词',
+      icon: '🔍',
+      action: '返回搜索'
+    },
+    RATE_LIMIT_EXCEEDED: {
+      title: '请求次数已用完',
+      description: error.rateLimit 
+        ? `将在 ${new Date(error.rateLimit.reset).toLocaleString()} 重置`
+        : '请稍后再试',
+      icon: '⏱️',
+      action: '了解限速规则'
+    },
+    INVALID_PARAMETER: {
+      title: '输入格式错误',
+      description: '请输入 1-100 个字符的有效单词',
+      icon: '⚠️',
+      action: '重新输入'
+    },
+    INTERNAL_ERROR: {
+      title: '服务器错误',
+      description: '我们正在处理，请稍后重试',
+      icon: '🔧',
+      action: '重试'
+    },
+    NETWORK_ERROR: {
+      title: '网络连接失败',
+      description: '请检查您的网络连接',
+      icon: '📡',
+      action: '重试'
+    }
+  }
+  
+  const msg = messages[error.code] || {
+    title: '发生错误',
+    description: error.error || '未知错误',
+    icon: '❌',
+    action: '返回'
+  }
+  
+  return (
+    <div className="rounded-lg border border-rose-200 bg-rose-50 p-6 dark:border-rose-900 dark:bg-rose-950/30">
+      <div className="flex items-start gap-4">
+        <span className="text-3xl">{msg.icon}</span>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-rose-900 dark:text-rose-400">
+            {msg.title}
+          </h3>
+          <p className="mt-1 text-sm text-rose-700 dark:text-rose-300">
+            {msg.description}
+          </p>
+          <button className="mt-4 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700">
+            {msg.action}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## 调试技巧 {{ id: 'debugging' }}
+
+### 查看完整错误信息
+
+在开发环境中记录完整的错误响应：
+
+```js
+fetch(apiUrl)
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      console.group('API Error')
+      console.log('Code:', data.code)
+      console.log('Error:', data.error)
+      console.log('Message:', data.message)
+      console.log('Rate Limit:', data.rateLimit)
+      console.groupEnd()
+    }
+  })
+```
+
+### 使用浏览器开发工具
+
+1. 打开浏览器开发者工具（F12）
+2. 切换到 Network 标签
+3. 查看 API 请求的详细信息
+4. 检查响应状态码和响应体
+
+---
+
+## 相关资源 {{ id: 'related-resources' }}
+
+<div className="not-prose">
+  <Button href="/rate-limits" variant="text" arrow="right">
+    了解限速规则
+  </Button>
+</div>
+
+<div className="not-prose">
+  <Button href="/examples" variant="text" arrow="right">
+    查看完整的错误处理示例
+  </Button>
+</div>
+
+<div className="not-prose">
+  <Button href="/api-reference" variant="text" arrow="right">
+    查看 API 完整文档
+  </Button>
+</div>

@@ -1,0 +1,337 @@
+export const metadata = {
+  title: '限速规则',
+  description: '了解 API 的限速机制和如何管理请求配额。',
+}
+
+# 限速规则
+
+为了保护 API 服务的稳定性和公平性，我们对公开 API 实施了基于 IP 的限速机制。{{ className: 'lead' }}
+
+---
+
+## 默认限额 {{ id: 'default-limits' }}
+
+<Row>
+  <Col>
+    每个 IP 地址默认享有以下限额：
+
+    <Properties>
+      <Property name="每日请求次数">
+        500 次
+      </Property>
+      <Property name="重置时间">
+        每天 UTC 0:00（北京时间早上 8:00）
+      </Property>
+      <Property name="计费单位">
+        按 IP 地址计算
+      </Property>
+    </Properties>
+
+    ### 限额计算规则
+
+    - 每次 API 调用消耗 1 次请求配额
+    - 无论请求成功或失败（除网络错误外），都会计入配额
+    - 404（未找到）、400（参数错误）等响应也会消耗配额
+    - 只有 429（超限）响应不消耗配额
+  </Col>
+  <Col sticky>
+    ```json {{ title: 'Rate Limit 信息' }}
+    {
+      "rateLimit": {
+        "remaining": 498,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+
+    <Note>
+      响应中的 `rateLimit` 字段显示了当前的配额使用情况。
+    </Note>
+  </Col>
+</Row>
+
+---
+
+## 响应头 {{ id: 'response-headers' }}
+
+<Row>
+  <Col>
+    每个 API 响应都包含以下响应头，方便您监控配额使用：
+
+    <Properties>
+      <Property name="X-RateLimit-Limit">
+        每日总限额（通常为 500）
+      </Property>
+      <Property name="X-RateLimit-Remaining">
+        今日剩余请求次数
+      </Property>
+      <Property name="X-RateLimit-Reset">
+        配额重置时间（ISO 8601 格式）
+      </Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+    ```bash {{ title: '查看响应头' }}
+    curl -I "https://api.keykey.cc/api/public/memory-card?word=hello"
+
+    # 响应头示例
+    # X-RateLimit-Limit: 500
+    # X-RateLimit-Remaining: 498
+    # X-RateLimit-Reset: 2025-10-24T00:00:00.000Z
+    ```
+  </Col>
+</Row>
+
+---
+
+## 超限处理 {{ id: 'rate-limit-handling' }}
+
+<Row>
+  <Col>
+    当您的请求次数超过每日限额时，API 会返回 `429 Too Many Requests` 状态码。
+
+    ### 超限响应
+
+    - **状态码**: 429
+    - **错误码**: `RATE_LIMIT_EXCEEDED`
+    - **建议**: 等待配额重置或联系管理员申请白名单
+
+    ### 最佳实践
+
+    1. 在客户端实现缓存机制
+    2. 监控剩余请求次数，接近限额时提醒用户
+    3. 批量查询时添加延迟
+    4. 合理规划请求频率
+  </Col>
+  <Col sticky>
+    ```json {{ title: '429 响应示例' }}
+    {
+      "success": false,
+      "error": "请求次数已达今日上限",
+      "code": "RATE_LIMIT_EXCEEDED",
+      "rateLimit": {
+        "remaining": 0,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+
+    <Note>
+      超限后，您仍然可以看到配额重置时间。
+    </Note>
+  </Col>
+</Row>
+
+---
+
+## IP 白名单
+
+<Row>
+  <Col>
+    如果您需要更高的请求限额，可以申请加入 IP 白名单。
+
+    ### 白名单特权
+
+    - **不受限制**: 白名单 IP 不受每日 500 次限制
+    - **响应优先**: 享有更高的服务优先级
+    - **适用场景**: 高频查询、数据分析、批量处理等
+
+    ### 申请条件
+
+    满足以下任一条件即可申请：
+
+    1. **开源项目**: 您的项目是开源的，使用本 API 提供公益服务
+    2. **教育用途**: 用于教学、学习或研究目的
+    3. **商业合作**: 需要大量调用 API 的商业项目
+
+    ### 申请方式
+
+    请通过以下方式联系管理员：
+
+    - **GitHub**: 在项目仓库提交 Issue
+    - **邮箱**: 发送申请邮件（包含项目介绍和使用场景）
+
+    申请时请提供：
+    - 您的固定 IP 地址
+    - 项目简介和用途说明
+    - 预估日请求量
+    - 项目网址（如有）
+  </Col>
+  <Col sticky>
+    ```json {{ title: '白名单 IP 响应' }}
+    {
+      "success": true,
+      "data": { ... },
+      "rateLimit": {
+        "remaining": null,
+        "limit": null,
+        "reset": null
+      }
+    }
+    ```
+
+    <Note>
+      白名单 IP 的 `rateLimit` 字段为 `null`，表示不受限制。
+    </Note>
+  </Col>
+</Row>
+
+---
+
+## 监控配额使用 {{ id: 'monitor-quota' }}
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+async function checkRateLimit() {
+  const response = await fetch(
+    'https://api.keykey.cc/api/public/memory-card?word=test'
+  )
+  
+  const remaining = parseInt(response.headers.get('X-RateLimit-Remaining'))
+  const limit = parseInt(response.headers.get('X-RateLimit-Limit'))
+  const reset = response.headers.get('X-RateLimit-Reset')
+  
+  const percentage = (remaining / limit) * 100
+  
+  console.log(`剩余请求: ${remaining}/${limit} (${percentage.toFixed(1)}%)`)
+  console.log(`重置时间: ${new Date(reset).toLocaleString()}`)
+  
+  // 警告阈值
+  if (percentage < 10) {
+    console.warn('⚠️ 请求配额不足 10%！')
+  } else if (percentage < 20) {
+    console.warn('⚠️ 请求配额不足 20%')
+  }
+  
+  return { remaining, limit, reset, percentage }
+}
+
+// 使用示例
+const rateLimitStatus = await checkRateLimit()
+```
+
+```python {{ title: 'Python' }}
+import requests
+from datetime import datetime
+
+def check_rate_limit():
+    """检查当前配额使用情况"""
+    response = requests.get(
+        'https://api.keykey.cc/api/public/memory-card',
+        params={'word': 'test'}
+    )
+    
+    remaining = int(response.headers.get('X-RateLimit-Remaining', 0))
+    limit = int(response.headers.get('X-RateLimit-Limit', 500))
+    reset = response.headers.get('X-RateLimit-Reset')
+    
+    percentage = (remaining / limit) * 100
+    
+    print(f'剩余请求: {remaining}/{limit} ({percentage:.1f}%)')
+    
+    if reset:
+        reset_time = datetime.fromisoformat(reset.replace('Z', '+00:00'))
+        print(f'重置时间: {reset_time.strftime("%Y-%m-%d %H:%M:%S")}')
+    
+    # 警告阈值
+    if percentage < 10:
+        print('⚠️ 请求配额不足 10%！')
+    elif percentage < 20:
+        print('⚠️ 请求配额不足 20%')
+    
+    return {
+        'remaining': remaining,
+        'limit': limit,
+        'reset': reset,
+        'percentage': percentage
+    }
+
+# 使用示例
+rate_limit_status = check_rate_limit()
+```
+
+</CodeGroup>
+
+---
+
+## 常见问题 {{ id: 'faq' }}
+
+<div className="not-prose my-6">
+  <div className="space-y-4">
+    <details className="group rounded-lg border border-zinc-900/10 p-4 dark:border-white/10">
+      <summary className="cursor-pointer font-semibold text-zinc-900 dark:text-white">
+        为什么我的配额消耗得特别快？
+      </summary>
+      <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+        <p>可能的原因：</p>
+        <ul className="mt-2 list-inside list-disc space-y-1">
+          <li>您与其他用户共享同一个公网 IP（如公司网络、校园网）</li>
+          <li>没有实现客户端缓存，重复查询相同单词</li>
+          <li>批量查询时没有控制请求频率</li>
+        </ul>
+        <p className="mt-2">建议实现本地缓存机制，避免重复请求。</p>
+      </div>
+    </details>
+
+    <details className="group rounded-lg border border-zinc-900/10 p-4 dark:border-white/10">
+      <summary className="cursor-pointer font-semibold text-zinc-900 dark:text-white">
+        配额什么时候重置？
+      </summary>
+      <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+        <p>配额在每天 UTC 0:00（北京时间早上 8:00）自动重置为 500 次。</p>
+        <p className="mt-2">您可以通过响应头 <code className="rounded bg-zinc-100 px-1 py-0.5 dark:bg-zinc-800">X-RateLimit-Reset</code> 查看精确的重置时间。</p>
+      </div>
+    </details>
+
+    <details className="group rounded-lg border border-zinc-900/10 p-4 dark:border-white/10">
+      <summary className="cursor-pointer font-semibold text-zinc-900 dark:text-white">
+        500 次请求够用吗？
+      </summary>
+      <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+        <p>对于大多数使用场景，500 次/天是足够的：</p>
+        <ul className="mt-2 list-inside list-disc space-y-1">
+          <li>个人学习使用：查询 50-100 个单词，配合缓存可用多天</li>
+          <li>小型应用：100-200 个活跃用户</li>
+          <li>开发测试：完全够用</li>
+        </ul>
+        <p className="mt-2">如需更高配额，请申请白名单。</p>
+      </div>
+    </details>
+
+    <details className="group rounded-lg border border-zinc-900/10 p-4 dark:border-white/10">
+      <summary className="cursor-pointer font-semibold text-zinc-900 dark:text-white">
+        如何避免超限？
+      </summary>
+      <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+        <p>推荐的最佳实践：</p>
+        <ol className="mt-2 list-inside list-decimal space-y-1">
+          <li>实现客户端缓存（24小时）</li>
+          <li>监控 <code className="rounded bg-zinc-100 px-1 py-0.5 dark:bg-zinc-800">rateLimit.remaining</code> 字段</li>
+          <li>剩余次数 &lt; 50 时提醒用户</li>
+          <li>批量查询时添加延迟（100-200ms）</li>
+          <li>在用户输入时使用防抖（debounce）</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+</div>
+
+---
+
+## 下一步 {{ id: 'next-steps' }}
+
+<div className="not-prose">
+  <Button href="/examples" variant="text" arrow="right">
+    查看缓存和限速监控的代码示例
+  </Button>
+</div>
+
+<div className="not-prose">
+  <Button href="/api-reference" variant="text" arrow="right">
+    查看完整 API 文档
+  </Button>
+</div>
+

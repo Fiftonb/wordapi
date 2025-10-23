@@ -1,0 +1,362 @@
+export const metadata = {
+  title: 'API 参考',
+  description: '单词记忆卡片 API 的完整参考文档。',
+}
+
+# API 参考
+
+本文档提供单词记忆卡片 API 的完整技术参考，包括端点说明、请求参数、响应格式和限速规则。{{ className: 'lead' }}
+
+---
+
+## 端点信息 {{ tag: 'GET', label: '/api/public/memory-card', id: 'endpoint-info' }}
+
+<Row>
+  <Col>
+    查询单词的记忆卡片数据。返回包含例句、词组、助记技巧等丰富内容的记忆卡片。
+
+    ### 请求参数
+
+    <Properties>
+      <Property name="word" type="string" required>
+        要查询的单词，长度 1-100 个字符。会自动转换为小写。
+      </Property>
+      <Property name="lang" type="string">
+        语言代码，默认为 `en`。支持的语言包括：en（英语）、es（西班牙语）、ja（日语）、de（德语）、fr（法语）等。
+      </Property>
+    </Properties>
+
+    ### 响应头
+
+    <Properties>
+      <Property name="X-RateLimit-Limit" type="integer">
+        每日总请求限额（默认 500）
+      </Property>
+      <Property name="X-RateLimit-Remaining" type="integer">
+        今日剩余请求次数
+      </Property>
+      <Property name="X-RateLimit-Reset" type="string">
+        限额重置时间（ISO 8601 格式）
+      </Property>
+      <Property name="Cache-Control" type="string">
+        缓存控制：`public, max-age=86400`（24小时）
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="请求示例">
+
+    ```bash {{ title: 'cURL' }}
+    curl -G https://api.keykey.cc/api/public/memory-card \
+      -d word=hello \
+      -d lang=en
+    ```
+
+    ```js
+    const response = await fetch(
+      'https://api.keykey.cc/api/public/memory-card?word=hello&lang=en'
+    )
+    const data = await response.json()
+    ```
+
+    ```python
+    import requests
+
+    response = requests.get(
+        'https://api.keykey.cc/api/public/memory-card',
+        params={'word': 'hello', 'lang': 'en'}
+    )
+    data = response.json()
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: '成功响应 (200)' }}
+    {
+      "success": true,
+      "data": {
+        "word": "hello",
+        "languageCategory": "en",
+        "phonetic": "/həˈloʊ/",
+        "examples": [
+          {
+            "sentence": "Hello, how are you doing today?",
+            "translation": "你好，今天过得怎么样？",
+            "usage": "非常常见的问候语，用于打招呼并询问对方近况。"
+          },
+          {
+            "sentence": "Hello! Is anyone there?",
+            "translation": "喂！有人在吗？",
+            "usage": "在电话接通、敲门或进入一个陌生空间时，用来引起注意或确认是否有人。"
+          },
+          {
+            "sentence": "Hello, Sarah! Nice to see you again.",
+            "translation": "你好，莎拉！很高兴再次见到你。",
+            "usage": "用于熟人之间，表达见到对方的喜悦。"
+          }
+        ],
+        "phrases": [
+          {
+            "phrase": "Hello there!",
+            "translation": "你好呀！",
+            "usage": "比"Hello"更热情、更友好的问候方式，常用于见到认识的人。"
+          },
+          {
+            "phrase": "Hello-hello?",
+            "translation": "喂？喂？",
+            "usage": "在电话中，当听不清对方声音或想确认对方是否还在时使用。"
+          }
+        ],
+        "mnemonics": "想象一下，你正在招手（hand）向别人打招呼，然后说"噢，你好！"（Oh, low! 听起来有点像hello）。",
+        "synonyms": [
+          {
+            "word": "Hi",
+            "difference": "比 'hello' 更随意、更口语化，适合非正式场合。"
+          },
+          {
+            "word": "Hey",
+            "difference": "非常口语化，常用于引起注意或打招呼，比 'hi' 更随意，有时也带有惊喜或疑问的语气。"
+          },
+          {
+            "word": "Greetings",
+            "difference": "比较正式的问候语，常用于书面语或正式场合，不如 'hello' 常用。"
+          }
+        ],
+        "usageScenes": [
+          "初次见面打招呼",
+          "日常问候（朋友、家人、同事）",
+          "接听电话",
+          "引起他人注意",
+          "网络聊天开场白"
+        ],
+        "cached": true
+      },
+      "rateLimit": {
+        "remaining": 499,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+
+  </Col>
+</Row>
+
+---
+
+## 数据字段说明 {{ id: 'data-fields' }}
+
+### MemoryCardData
+
+<Row>
+  <Col>
+    <Properties>
+      <Property name="word" type="string">
+        单词原文（小写）
+      </Property>
+      <Property name="languageCategory" type="string">
+        语言代码
+      </Property>
+      <Property name="phonetic" type="string">
+        音标（可选）
+      </Property>
+      <Property name="examples" type="array">
+        例句列表，每个例句包含 sentence（英文）、translation（翻译）、usage（用法说明，可选）
+      </Property>
+      <Property name="phrases" type="array">
+        词组搭配列表（可选），每个词组包含 phrase、translation、usage
+      </Property>
+      <Property name="mnemonics" type="string">
+        助记技巧（可选）
+      </Property>
+      <Property name="etymology" type="string">
+        词根词缀分析（可选）
+      </Property>
+      <Property name="synonyms" type="array">
+        同义词辨析列表（可选），每个包含 word 和 difference
+      </Property>
+      <Property name="usageScenes" type="array">
+        使用场景列表（可选）
+      </Property>
+      <Property name="cached" type="boolean">
+        是否来自缓存
+      </Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+    ```json {{ title: '数据示例' }}
+    {
+      "word": "study",
+      "languageCategory": "en",
+      "examples": [
+        {
+          "sentence": "She decided to study abroad for a year to improve her language skills.",
+          "translation": "她决定出国留学一年以提高她的语言能力。",
+          "usage": "描述为了提升某项技能或达成特定目标而进行的学习行为。"
+        },
+        {
+          "sentence": "The students are busy studying for their final exams.",
+          "translation": "学生们正忙于为期末考试复习。",
+          "usage": "强调为考试而进行的集中学习或复习。"
+        }
+      ],
+      "synonyms": [
+        {
+          "word": "learn",
+          "difference": "'Learn' 更侧重于获取知识或技能的过程，而 'study' 强调通过刻意努力来学习。"
+        },
+        {
+          "word": "research",
+          "difference": "'Research' 通常指为了发现新知识或验证现有理论而进行的系统性、深入的探究，比 'study' 更具探索性和科学性。"
+        },
+        {
+          "word": "read",
+          "difference": "'Read' 仅仅是阅读文字的过程，而 'study' 包含了阅读、理解、思考、分析等更深层次的学习过程。"
+        }
+      ],
+      "usageScenes": [
+        "学术学习（学校、大学）",
+        "技能培训",
+        "考试准备",
+        "信息分析与研究",
+        "自我提升"
+      ],
+      "cached": true
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+## 错误响应 {{ id: 'error-responses' }}
+
+### 未找到单词 {{ tag: 'NOT_FOUND', label: '404' }}
+
+<Row>
+  <Col>
+    当请求的单词尚未生成记忆卡片时返回。这可能是因为：
+    - 单词是生僻词
+    - 单词尚未被收录
+    - 拼写错误
+  </Col>
+  <Col sticky>
+    ```json {{ title: '404 响应' }}
+    {
+      "success": false,
+      "error": "该单词暂未生成记忆卡片",
+      "code": "NOT_FOUND",
+      "message": "单词 \"xyz\" (en) 尚未生成记忆卡片。",
+      "rateLimit": {
+        "remaining": 497,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+### 超出限额 {{ tag: 'RATE_LIMIT_EXCEEDED', label: '429' }}
+
+<Row>
+  <Col>
+    当 IP 地址的每日请求次数超过限额时返回。限额在每天 UTC 0:00 自动重置。
+  </Col>
+  <Col sticky>
+    ```json {{ title: '429 响应' }}
+    {
+      "success": false,
+      "error": "请求次数已达今日上限",
+      "code": "RATE_LIMIT_EXCEEDED",
+      "rateLimit": {
+        "remaining": 0,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+### 参数错误 {{ tag: 'INVALID_PARAMETER', label: '400' }}
+
+<Row>
+  <Col>
+    当请求参数不符合要求时返回。常见原因：
+    - word 参数为空
+    - word 长度超过 100 字符
+    - 参数类型不正确
+  </Col>
+  <Col sticky>
+    ```json {{ title: '400 响应' }}
+    {
+      "success": false,
+      "error": "参数错误：word 参数必须是非空字符串",
+      "code": "INVALID_PARAMETER",
+      "rateLimit": {
+        "remaining": 496,
+        "limit": 500,
+        "reset": "2025-10-24T00:00:00.000Z"
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+### 服务器错误 {{ tag: 'INTERNAL_ERROR', label: '500' }}
+
+<Row>
+  <Col>
+    服务器内部错误。如果持续遇到此错误，请联系技术支持。
+  </Col>
+  <Col sticky>
+    ```json {{ title: '500 响应' }}
+    {
+      "success": false,
+      "error": "服务器内部错误",
+      "code": "INTERNAL_ERROR"
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+## 支持的语言 {{ id: 'supported-languages' }}
+
+<Row>
+  <Col>
+    API 支持以下语言的单词查询：
+
+    暂时只支持部分英语单词，数据还在慢慢增加
+
+    <Properties>
+      <Property name="en">英语</Property>
+      <Property name="es">西班牙语</Property>
+      <Property name="ja">日语</Property>
+      <Property name="de">德语</Property>
+      <Property name="fr">法语</Property>
+      <Property name="it">意大利语</Property>
+      <Property name="pt">葡萄牙语</Property>
+      <Property name="ru">俄语</Property>
+      <Property name="ko">韩语</Property>
+      <Property name="ar">阿拉伯语</Property>
+    </Properties>
+  </Col>
+  <Col sticky>
+    ```bash {{ title: '多语言查询' }}
+    # 英语
+    curl "https://api.keykey.cc/api/public/memory-card?word=hello&lang=en"
+
+    # 西班牙语
+    curl "https://api.keykey.cc/api/public/memory-card?word=hola&lang=es"
+
+    # 日语
+    curl "https://api.keykey.cc/api/public/memory-card?word=こんにちは&lang=ja"
+    ```
+  </Col>
+</Row>
+

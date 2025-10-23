@@ -1,0 +1,238 @@
+export const metadata = {
+  title: '快速开始',
+  description: '学习如何快速使用单词记忆卡片 API 查询单词信息。',
+}
+
+# 快速开始
+
+本指南将帮助您快速上手单词记忆卡片 API。我们将介绍如何查询单词、处理响应数据，以及如何在不同编程语言中使用 API。{{ className: 'lead' }}
+
+<Note>
+  本 API 完全公开，无需认证即可使用。每个 IP 每天有 500 次免费请求额度。
+</Note>
+
+## 基础查询 {{ id: 'basic-query' }}
+
+最简单的方式是使用浏览器或 cURL 直接访问 API：
+
+<CodeGroup>
+
+```bash {{ title: 'cURL' }}
+curl "https://api.keykey.cc/api/public/memory-card?word=hello"
+```
+
+```bash {{ title: '浏览器' }}
+# 直接在浏览器中访问
+https://api.keykey.cc/api/public/memory-card?word=hello
+```
+
+</CodeGroup>
+
+## 使用示例 {{ id: 'code-examples' }}
+
+以下是在不同编程语言中调用 API 的示例：
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+async function getMemoryCard(word, lang = 'en') {
+  const url = `https://api.keykey.cc/api/public/memory-card?word=${encodeURIComponent(word)}&lang=${lang}`
+  
+  const response = await fetch(url)
+  const data = await response.json()
+  
+  if (data.success) {
+    console.log('单词:', data.data.word)
+    console.log('音标:', data.data.phonetic)
+    console.log('例句:', data.data.examples)
+    console.log('剩余请求次数:', data.rateLimit.remaining)
+  } else {
+    console.error('错误:', data.error)
+  }
+  
+  return data
+}
+
+// 使用示例
+const card = await getMemoryCard('hello')
+```
+
+```python {{ title: 'Python' }}
+import requests
+
+def get_memory_card(word: str, lang: str = 'en'):
+    url = 'https://api.keykey.cc/api/public/memory-card'
+    params = {'word': word, 'lang': lang}
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    if data['success']:
+        print(f"单词: {data['data']['word']}")
+        print(f"音标: {data['data']['phonetic']}")
+        print(f"例句: {data['data']['examples']}")
+        print(f"剩余请求次数: {data['rateLimit']['remaining']}")
+    else:
+        print(f"错误: {data['error']}")
+    
+    return data
+
+# 使用示例
+card = get_memory_card('hello')
+```
+
+```php {{ title: 'PHP' }}
+<?php
+function getMemoryCard($word, $lang = 'en') {
+    $url = 'https://api.keykey.cc/api/public/memory-card?' . 
+           http_build_query(['word' => $word, 'lang' => $lang]);
+    
+    $response = file_get_contents($url);
+    $data = json_decode($response, true);
+    
+    if ($data['success']) {
+        echo "单词: " . $data['data']['word'] . "\n";
+        echo "音标: " . $data['data']['phonetic'] . "\n";
+        echo "剩余请求次数: " . $data['rateLimit']['remaining'] . "\n";
+    } else {
+        echo "错误: " . $data['error'] . "\n";
+    }
+    
+    return $data;
+}
+
+// 使用示例
+$card = getMemoryCard('hello');
+?>
+```
+
+</CodeGroup>
+
+## 响应数据 {{ id: 'response-data' }}
+
+成功的响应包含以下内容：
+
+```json {{ title: '响应示例' }}
+{
+  "success": true,
+  "data": {
+    "word": "hello",
+    "languageCategory": "en",
+    "phonetic": "/həˈloʊ/",
+    "examples": [
+      {
+        "sentence": "Hello, how are you doing today?",
+        "translation": "你好，今天过得怎么样？",
+        "usage": "非常常见的问候语，用于打招呼并询问对方近况。"
+      },
+      {
+        "sentence": "Hello! Is anyone there?",
+        "translation": "喂！有人在吗？",
+        "usage": "在电话接通、敲门或进入一个陌生空间时，用来引起注意或确认是否有人。"
+      },
+      {
+        "sentence": "Hello, Sarah! Nice to see you again.",
+        "translation": "你好，莎拉！很高兴再次见到你。",
+        "usage": "用于熟人之间，表达见到对方的喜悦。"
+      }
+    ],
+    "phrases": [
+      {
+        "phrase": "Hello there!",
+        "translation": "你好呀！",
+        "usage": "比"Hello"更热情、更友好的问候方式，常用于见到认识的人。"
+      },
+      {
+        "phrase": "Hello-hello?",
+        "translation": "喂？喂？",
+        "usage": "在电话中，当听不清对方声音或想确认对方是否还在时使用。"
+      }
+    ],
+    "mnemonics": "想象一下，你正在招手（hand）向别人打招呼，然后说"噢，你好！"（Oh, low! 听起来有点像hello）。",
+    "synonyms": [
+      {
+        "word": "Hi",
+        "difference": "比 'hello' 更随意、更口语化，适合非正式场合。"
+      },
+      {
+        "word": "Hey",
+        "difference": "非常口语化，常用于引起注意或打招呼，比 'hi' 更随意，有时也带有惊喜或疑问的语气。"
+      },
+      {
+        "word": "Greetings",
+        "difference": "比较正式的问候语，常用于书面语或正式场合，不如 'hello' 常用。"
+      }
+    ],
+    "usageScenes": [
+      "初次见面打招呼",
+      "日常问候（朋友、家人、同事）",
+      "接听电话",
+      "引起他人注意",
+      "网络聊天开场白"
+    ],
+    "cached": true
+  },
+  "rateLimit": {
+    "remaining": 499,
+    "limit": 500,
+    "reset": "2025-10-24T00:00:00.000Z"
+  }
+}
+```
+
+## 错误处理 {{ id: 'error-handling' }}
+
+API 可能返回以下错误：
+
+<Properties>
+  <Property name="NOT_FOUND (404)">
+    单词尚未生成记忆卡片，可能是生僻词或尚未收录。
+  </Property>
+  <Property name="RATE_LIMIT_EXCEEDED (429)">
+    超过每日请求限额（500次），将在第二天 UTC 0:00 重置。
+  </Property>
+  <Property name="INVALID_PARAMETER (400)">
+    参数错误，请检查 word 参数是否为有效字符串。
+  </Property>
+  <Property name="INTERNAL_ERROR (500)">
+    服务器内部错误，请稍后重试。
+  </Property>
+</Properties>
+
+错误响应示例：
+
+```json {{ title: '错误响应' }}
+{
+  "success": false,
+  "error": "该单词暂未生成记忆卡片",
+  "code": "NOT_FOUND",
+  "message": "单词 \"xyz\" (en) 尚未生成记忆卡片。请联系管理员或等待后续更新。",
+  "rateLimit": {
+    "remaining": 497,
+    "limit": 500,
+    "reset": "2025-10-24T00:00:00.000Z"
+  }
+}
+```
+
+## 下一步 {{ id: 'next-steps' }}
+
+现在您已经了解了基础用法，可以：
+
+<div className="not-prose">
+  <Button href="/api-reference" variant="text" arrow="right">
+    查看完整 API 文档
+  </Button>
+</div>
+
+<div className="not-prose">
+  <Button href="/examples" variant="text" arrow="right">
+    浏览更多示例代码
+  </Button>
+</div>
+
+<div className="not-prose">
+  <Button href="/rate-limits" variant="text" arrow="right">
+    了解限速规则
+  </Button>
+</div>

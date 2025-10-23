@@ -1,0 +1,540 @@
+export const metadata = {
+  title: '使用示例',
+  description: '单词记忆卡片 API 的实用示例和最佳实践。',
+}
+
+# 使用示例
+
+本页面提供各种实用的代码示例，帮助您更好地使用单词记忆卡片 API。{{ className: 'lead' }}
+
+---
+
+## 客户端缓存策略 {{ id: 'client-cache' }}
+
+为了节省请求额度和提升性能，建议在客户端实现缓存机制。{{ className: 'lead' }}
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+// 使用 localStorage 缓存 API 响应
+function getCachedOrFetch(word, lang = 'en') {
+  const cacheKey = `memory-card-${word}-${lang}`
+  const cached = localStorage.getItem(cacheKey)
+  
+  if (cached) {
+    const { data, timestamp } = JSON.parse(cached)
+    // 缓存 24 小时
+    if (Date.now() - timestamp < 86400000) {
+      console.log('使用缓存数据')
+      return Promise.resolve(data)
+    }
+  }
+  
+  // 缓存未命中或已过期，请求 API
+  return fetch(`https://api.keykey.cc/api/public/memory-card?word=${word}&lang=${lang}`)
+    .then(res => res.json())
+    .then(data => {
+      // 保存到缓存
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }))
+      return data
+    })
+}
+
+// 使用示例
+const card = await getCachedOrFetch('hello')
+```
+
+```python {{ title: 'Python' }}
+import json
+import time
+import os
+import requests
+
+CACHE_DIR = '.word_cache'
+CACHE_DURATION = 86400  # 24 小时
+
+def get_cached_or_fetch(word: str, lang: str = 'en'):
+    """带缓存的查询函数"""
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    
+    cache_file = os.path.join(CACHE_DIR, f'{word}_{lang}.json')
+    
+    # 检查缓存
+    if os.path.exists(cache_file):
+        with open(cache_file, 'r', encoding='utf-8') as f:
+            cached = json.load(f)
+            if time.time() - cached['timestamp'] < CACHE_DURATION:
+                print('使用缓存数据')
+                return cached['data']
+    
+    # 请求 API
+    url = 'https://api.keykey.cc/api/public/memory-card'
+    response = requests.get(url, params={'word': word, 'lang': lang})
+    data = response.json()
+    
+    # 保存到缓存
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        json.dump({
+            'data': data,
+            'timestamp': time.time()
+        }, f, ensure_ascii=False, indent=2)
+    
+    return data
+
+# 使用示例
+card = get_cached_or_fetch('hello')
+```
+
+</CodeGroup>
+
+---
+
+## 批量查询单词 {{ id: 'batch-query' }}
+
+查询多个单词时，建议添加延迟以避免过快消耗请求配额。{{ className: 'lead' }}
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+// 批量查询单词，带延迟和错误处理
+async function batchGetMemoryCards(words, lang = 'en', delayMs = 100) {
+  const results = []
+  
+  for (const word of words) {
+    try {
+      const response = await fetch(
+        `https://api.keykey.cc/api/public/memory-card?word=${encodeURIComponent(word)}&lang=${lang}`
+      )
+      const data = await response.json()
+      
+      if (data.success) {
+        results.push({
+          word,
+          success: true,
+          data: data.data,
+          rateLimit: data.rateLimit
+        })
+      } else {
+        results.push({
+          word,
+          success: false,
+          error: data.error,
+          code: data.code
+        })
+      }
+      
+      // 延迟，避免请求过快
+      if (delayMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, delayMs))
+      }
+    } catch (error) {
+      results.push({
+        word,
+        success: false,
+        error: error.message
+      })
+    }
+  }
+  
+  return results
+}
+
+// 使用示例
+const words = ['hello', 'world', 'study', 'memory']
+const results = await batchGetMemoryCards(words)
+
+console.log(`成功: ${results.filter(r => r.success).length}`)
+console.log(`失败: ${results.filter(r => !r.success).length}`)
+```
+
+```python {{ title: 'Python' }}
+import requests
+import time
+
+def batch_get_memory_cards(words: list, lang: str = 'en', delay_ms: int = 100):
+    """批量查询单词"""
+    results = []
+    
+    for word in words:
+        try:
+            url = 'https://api.keykey.cc/api/public/memory-card'
+            response = requests.get(url, params={'word': word, 'lang': lang})
+            data = response.json()
+            
+            if data['success']:
+                results.append({
+                    'word': word,
+                    'success': True,
+                    'data': data['data'],
+                    'rate_limit': data['rateLimit']
+                })
+            else:
+                results.append({
+                    'word': word,
+                    'success': False,
+                    'error': data['error'],
+                    'code': data['code']
+                })
+            
+            # 延迟
+            if delay_ms > 0:
+                time.sleep(delay_ms / 1000)
+                
+        except Exception as error:
+            results.append({
+                'word': word,
+                'success': False,
+                'error': str(error)
+            })
+    
+    return results
+
+# 使用示例
+words = ['hello', 'world', 'study', 'memory']
+results = batch_get_memory_cards(words)
+
+success_count = sum(1 for r in results if r['success'])
+print(f"成功: {success_count}, 失败: {len(results) - success_count}")
+```
+
+</CodeGroup>
+
+---
+
+## 监控 Rate Limit
+
+通过响应头或响应体监控剩余请求次数，接近限额时提示用户。{{ className: 'lead' }}
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+async function getMemoryCardWithRateLimitCheck(word, lang = 'en') {
+  const response = await fetch(
+    `https://api.keykey.cc/api/public/memory-card?word=${word}&lang=${lang}`
+  )
+  
+  // 从响应头获取 Rate Limit 信息
+  const remaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0')
+  const limit = parseInt(response.headers.get('X-RateLimit-Limit') || '500')
+  const reset = response.headers.get('X-RateLimit-Reset')
+  
+  const data = await response.json()
+  
+  // 检查剩余次数
+  if (remaining < 50) {
+    console.warn(`⚠️ API 请求次数即将用尽: ${remaining}/${limit}`)
+    console.warn(`将在 ${new Date(reset).toLocaleString()} 重置`)
+  }
+  
+  if (remaining < 10) {
+    alert('API 请求次数不足 10 次，请谨慎使用！')
+  }
+  
+  return data
+}
+
+// 使用示例
+const card = await getMemoryCardWithRateLimitCheck('hello')
+```
+
+```python {{ title: 'Python' }}
+import requests
+from datetime import datetime
+
+def get_memory_card_with_rate_limit_check(word: str, lang: str = 'en'):
+    """查询单词并监控 Rate Limit"""
+    url = 'https://api.keykey.cc/api/public/memory-card'
+    response = requests.get(url, params={'word': word, 'lang': lang})
+    
+    # 从响应头获取 Rate Limit 信息
+    remaining = int(response.headers.get('X-RateLimit-Remaining', 0))
+    limit = int(response.headers.get('X-RateLimit-Limit', 500))
+    reset = response.headers.get('X-RateLimit-Reset')
+    
+    data = response.json()
+    
+    # 检查剩余次数
+    if remaining < 50:
+        print(f'⚠️ API 请求次数即将用尽: {remaining}/{limit}')
+        if reset:
+            reset_time = datetime.fromisoformat(reset.replace('Z', '+00:00'))
+            print(f'将在 {reset_time.strftime("%Y-%m-%d %H:%M:%S")} 重置')
+    
+    if remaining < 10:
+        print('❌ API 请求次数不足 10 次，请谨慎使用！')
+    
+    return data
+
+# 使用示例
+card = get_memory_card_with_rate_limit_check('hello')
+```
+
+</CodeGroup>
+
+---
+
+## 错误处理最佳实践 {{ id: 'error-best-practices' }}
+
+完善的错误处理可以提升用户体验。{{ className: 'lead' }}
+
+<CodeGroup>
+
+```js {{ title: 'JavaScript' }}
+async function safeGetMemoryCard(word, lang = 'en') {
+  try {
+    const response = await fetch(
+      `https://api.keykey.cc/api/public/memory-card?word=${word}&lang=${lang}`
+    )
+    const data = await response.json()
+    
+    // 根据不同错误码处理
+    if (!data.success) {
+      switch (data.code) {
+        case 'NOT_FOUND':
+          return {
+            error: true,
+            type: 'not_found',
+            message: `单词 "${word}" 尚未收录`,
+            suggestion: '尝试其他单词或联系管理员添加'
+          }
+        
+        case 'RATE_LIMIT_EXCEEDED':
+          const resetTime = new Date(data.rateLimit.reset)
+          return {
+            error: true,
+            type: 'rate_limit',
+            message: '请求次数已达上限',
+            suggestion: `将在 ${resetTime.toLocaleString()} 重置`,
+            resetTime
+          }
+        
+        case 'INVALID_PARAMETER':
+          return {
+            error: true,
+            type: 'invalid_input',
+            message: '输入的单词格式不正确',
+            suggestion: '请输入 1-100 个字符的有效单词'
+          }
+        
+        default:
+          return {
+            error: true,
+            type: 'unknown',
+            message: data.error || '未知错误',
+            suggestion: '请稍后重试'
+          }
+      }
+    }
+    
+    // 成功返回
+    return {
+      error: false,
+      data: data.data,
+      rateLimit: data.rateLimit
+    }
+    
+  } catch (error) {
+    return {
+      error: true,
+      type: 'network',
+      message: '网络请求失败',
+      suggestion: '请检查网络连接',
+      details: error.message
+    }
+  }
+}
+
+// 使用示例
+const result = await safeGetMemoryCard('hello')
+
+if (result.error) {
+  console.error(`错误: ${result.message}`)
+  console.log(`建议: ${result.suggestion}`)
+} else {
+  console.log('单词:', result.data.word)
+  console.log('剩余次数:', result.rateLimit.remaining)
+}
+```
+
+```python {{ title: 'Python' }}
+import requests
+from typing import Dict, Any
+from datetime import datetime
+
+def safe_get_memory_card(word: str, lang: str = 'en') -> Dict[str, Any]:
+    """安全的单词查询函数，带完善的错误处理"""
+    try:
+        url = 'https://api.keykey.cc/api/public/memory-card'
+        response = requests.get(url, params={'word': word, 'lang': lang}, timeout=10)
+        data = response.json()
+        
+        # 根据不同错误码处理
+        if not data['success']:
+            code = data.get('code')
+            
+            if code == 'NOT_FOUND':
+                return {
+                    'error': True,
+                    'type': 'not_found',
+                    'message': f'单词 "{word}" 尚未收录',
+                    'suggestion': '尝试其他单词或联系管理员添加'
+                }
+            
+            elif code == 'RATE_LIMIT_EXCEEDED':
+                reset_time = datetime.fromisoformat(
+                    data['rateLimit']['reset'].replace('Z', '+00:00')
+                )
+                return {
+                    'error': True,
+                    'type': 'rate_limit',
+                    'message': '请求次数已达上限',
+                    'suggestion': f'将在 {reset_time.strftime("%Y-%m-%d %H:%M:%S")} 重置',
+                    'reset_time': reset_time
+                }
+            
+            elif code == 'INVALID_PARAMETER':
+                return {
+                    'error': True,
+                    'type': 'invalid_input',
+                    'message': '输入的单词格式不正确',
+                    'suggestion': '请输入 1-100 个字符的有效单词'
+                }
+            
+            else:
+                return {
+                    'error': True,
+                    'type': 'unknown',
+                    'message': data.get('error', '未知错误'),
+                    'suggestion': '请稍后重试'
+                }
+        
+        # 成功返回
+        return {
+            'error': False,
+            'data': data['data'],
+            'rate_limit': data['rateLimit']
+        }
+        
+    except requests.RequestException as error:
+        return {
+            'error': True,
+            'type': 'network',
+            'message': '网络请求失败',
+            'suggestion': '请检查网络连接',
+            'details': str(error)
+        }
+
+# 使用示例
+result = safe_get_memory_card('hello')
+
+if result['error']:
+    print(f"错误: {result['message']}")
+    print(f"建议: {result['suggestion']}")
+else:
+    print(f"单词: {result['data']['word']}")
+    print(f"剩余次数: {result['rate_limit']['remaining']}")
+```
+
+</CodeGroup>
+
+---
+
+## React Hook 示例
+
+在 React 应用中使用的自定义 Hook。{{ className: 'lead' }}
+
+<CodeGroup>
+
+```jsx {{ title: 'React Hook' }}
+import { useState, useEffect } from 'react'
+
+function useMemoryCard(word, lang = 'en') {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [rateLimit, setRateLimit] = useState(null)
+
+  useEffect(() => {
+    if (!word) return
+
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const response = await fetch(
+          `https://api.keykey.cc/api/public/memory-card?word=${encodeURIComponent(word)}&lang=${lang}`
+        )
+        const result = await response.json()
+
+        if (result.success) {
+          setData(result.data)
+          setRateLimit(result.rateLimit)
+        } else {
+          setError({
+            message: result.error,
+            code: result.code
+          })
+          setRateLimit(result.rateLimit)
+        }
+      } catch (err) {
+        setError({
+          message: '网络请求失败',
+          code: 'NETWORK_ERROR'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [word, lang])
+
+  return { data, loading, error, rateLimit }
+}
+
+// 使用示例
+function WordCard({ word }) {
+  const { data, loading, error, rateLimit } = useMemoryCard(word)
+
+  if (loading) return <div>加载中...</div>
+  if (error) return <div>错误: {error.message}</div>
+  if (!data) return null
+
+  return (
+    <div>
+      <h2>{data.word}</h2>
+      <p>{data.phonetic}</p>
+      {data.examples.map((ex, i) => (
+        <div key={i}>
+          <p>{ex.sentence}</p>
+          <p>{ex.translation}</p>
+        </div>
+      ))}
+      <small>剩余请求: {rateLimit?.remaining}/{rateLimit?.limit}</small>
+    </div>
+  )
+}
+```
+
+</CodeGroup>
+
+---
+
+## 下一步 {{ id: 'next-steps' }}
+
+<div className="not-prose">
+  <Button href="/api-reference" variant="text" arrow="right">
+    查看完整 API 文档
+  </Button>
+</div>
+
+<div className="not-prose">
+  <Button href="/rate-limits" variant="text" arrow="right">
+    了解限速规则
+  </Button>
+</div>
+
