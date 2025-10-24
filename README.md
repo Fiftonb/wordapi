@@ -1,12 +1,12 @@
-# 单词记忆卡片 API 文档网站
+# 单词记忆卡片演示网站 附带调用API文档
 
-一个基于 [Protocol 模板](https://tailwindcss.com/plus) 构建的单词记忆卡片 API 文档网站，使用 [Tailwind CSS](https://tailwindcss.com) 和 [Next.js](https://nextjs.org) 开发。
+一个基于 [Protocol 模板](https://tailwindcss.com/plus) 构建的单词记忆卡片演示网站，使用 [Tailwind CSS](https://tailwindcss.com) 和 [Next.js](https://nextjs.org) 开发。
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFiftonb%2Fwordapi)
 
 ## 项目简介
 
-本项目是 [api.keykey.cc](https://api.keykey.cc) 单词记忆卡片 API 的官方文档网站，提供：
+本项目主要用于演示对接 [api.keykey.cc](https://api.keykey.cc) 单词记忆卡片 API 另外附带API调用文档，提供：
 
 - 🔍 **单词搜索和查询** - 直观的搜索界面，快速查找单词
 - 📚 **详细的记忆卡片** - 包含例句、词组、助记技巧、词根词缀等
@@ -206,7 +206,6 @@ const API_BASE_URL = 'https://your-api-domain.com'
 
 - 提交 GitHub Issue
 - 发送邮件
-- 访问 [api.keykey.cc](https://api.keykey.cc)
 
 ---
 
