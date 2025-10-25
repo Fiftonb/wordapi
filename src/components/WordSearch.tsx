@@ -24,7 +24,7 @@ export function WordSearch({
   const [isSearching, setIsSearching] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     const trimmedWord = word.trim()
     
@@ -35,14 +35,11 @@ export function WordSearch({
     // 设置搜索状态
     setIsSearching(true)
 
-    // 添加短暂延迟以显示动画效果
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    // 跳转到单词详情页
+    // 立即跳转到单词详情页（Suspense 会显示骨架屏）
     router.push(`/word/${encodeURIComponent(trimmedWord.toLowerCase())}`)
     
     // 重置状态（页面跳转后会卸载组件，但为了安全起见还是重置）
-    setIsSearching(false)
+    setTimeout(() => setIsSearching(false), 100)
   }
 
   return (

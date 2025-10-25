@@ -1,11 +1,14 @@
 /**
  * 单词详情页面 - 动态路由
+ * 使用 Suspense + Streaming 优化加载体验
  */
 
 import { type Metadata } from 'next'
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { getMemoryCard } from '@/lib/api'
 import { MemoryCard } from '@/components/MemoryCard'
+import { MemoryCardSkeleton } from '@/components/MemoryCardSkeleton'
 import { Button } from '@/components/Button'
 import Link from 'next/link'
 import { Tag } from '@/components/Tag'
@@ -29,7 +32,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function WordPage({ params, searchParams }: PageProps) {
+/**
+ * 异步数据加载组件
+ * 在 Suspense 边界内加载和渲染数据
+ */
+async function WordContent({ params, searchParams }: PageProps) {
   const { word } = await params
   const { lang = 'en' } = await searchParams
   
@@ -116,7 +123,7 @@ export default async function WordPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <>
       {/* Rate Limit 信息 */}
       {response.rateLimit && (
         <div className="mb-6 rounded-lg border border-zinc-900/10 bg-zinc-50 p-4 dark:border-white/10 dark:bg-zinc-900/50">
@@ -148,6 +155,20 @@ export default async function WordPage({ params, searchParams }: PageProps) {
           返回首页查询更多单词
         </Button>
       </div>
+    </>
+  )
+}
+
+/**
+ * 单词详情页面 - 立即渲染外壳
+ * 使用 Suspense 显示骨架屏直到数据加载完成
+ */
+export default function WordPage({ params, searchParams }: PageProps) {
+  return (
+    <div className="mx-auto max-w-4xl">
+      <Suspense fallback={<MemoryCardSkeleton />}>
+        <WordContent params={params} searchParams={searchParams} />
+      </Suspense>
     </div>
   )
 }
