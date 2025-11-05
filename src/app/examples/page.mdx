@@ -218,7 +218,7 @@ async function getMemoryCardWithRateLimitCheck(word, lang = 'en') {
   
   // 从响应头获取 Rate Limit 信息
   const remaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0')
-  const limit = parseInt(response.headers.get('X-RateLimit-Limit') || '500')
+  const limit = parseInt(response.headers.get('X-RateLimit-Limit') || '150')
   const reset = response.headers.get('X-RateLimit-Reset')
   
   const data = await response.json()
@@ -251,7 +251,7 @@ def get_memory_card_with_rate_limit_check(word: str, lang: str = 'en'):
     
     # 从响应头获取 Rate Limit 信息
     remaining = int(response.headers.get('X-RateLimit-Remaining', 0))
-    limit = int(response.headers.get('X-RateLimit-Limit', 500))
+    limit = int(response.headers.get('X-RateLimit-Limit', 150))
     reset = response.headers.get('X-RateLimit-Reset')
     
     data = response.json()

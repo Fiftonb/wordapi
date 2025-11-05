@@ -17,7 +17,7 @@ export const metadata = {
 
     <Properties>
       <Property name="每日请求次数">
-        500 次
+        150 次
       </Property>
       <Property name="重置时间">
         每天 UTC 0:00（北京时间早上 8:00）
@@ -38,8 +38,8 @@ export const metadata = {
     ```json {{ title: 'Rate Limit 信息' }}
     {
       "rateLimit": {
-        "remaining": 498,
-        "limit": 500,
+        "remaining": 148,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -61,7 +61,7 @@ export const metadata = {
 
     <Properties>
       <Property name="X-RateLimit-Limit">
-        每日总限额（通常为 500）
+        每日总限额（通常为 150）
       </Property>
       <Property name="X-RateLimit-Remaining">
         今日剩余请求次数
@@ -76,8 +76,8 @@ export const metadata = {
     curl -I "https://api.keykey.cc/api/public/memory-card?word=hello"
 
     # 响应头示例
-    # X-RateLimit-Limit: 500
-    # X-RateLimit-Remaining: 498
+    # X-RateLimit-Limit: 150
+    # X-RateLimit-Remaining: 148
     # X-RateLimit-Reset: 2025-10-24T00:00:00.000Z
     ```
   </Col>
@@ -112,7 +112,7 @@ export const metadata = {
       "code": "RATE_LIMIT_EXCEEDED",
       "rateLimit": {
         "remaining": 0,
-        "limit": 500,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -134,7 +134,7 @@ export const metadata = {
 
     ### 白名单特权
 
-    - **不受限制**: 白名单 IP 不受每日 500 次限制
+    - **不受限制**: 白名单 IP 不受每日 150 次限制
     - **响应优先**: 享有更高的服务优先级
     - **适用场景**: 高频查询、数据分析、批量处理等
 
@@ -281,17 +281,17 @@ rate_limit_status = check_rate_limit()
         配额什么时候重置？
       </summary>
       <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-        <p>配额在每天 UTC 0:00（北京时间早上 8:00）自动重置为 500 次。</p>
+        <p>配额在每天 UTC 0:00（北京时间早上 8:00）自动重置为 150 次。</p>
         <p className="mt-2">您可以通过响应头 <code className="rounded bg-zinc-100 px-1 py-0.5 dark:bg-zinc-800">X-RateLimit-Reset</code> 查看精确的重置时间。</p>
       </div>
     </details>
 
     <details className="group rounded-lg border border-zinc-900/10 p-4 dark:border-white/10">
       <summary className="cursor-pointer font-semibold text-zinc-900 dark:text-white">
-        500 次请求够用吗？
+        150 次请求够用吗？
       </summary>
       <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-        <p>对于大多数使用场景，500 次/天是足够的：</p>
+        <p>对于大多数使用场景，150 次/天是足够的：</p>
         <ul className="mt-2 list-inside list-disc space-y-1">
           <li>个人学习使用：查询 50-100 个单词，配合缓存可用多天</li>
           <li>小型应用：100-200 个活跃用户</li>

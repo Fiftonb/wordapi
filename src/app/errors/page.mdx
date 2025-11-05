@@ -20,8 +20,8 @@ export const metadata = {
   "code": "ERROR_CODE",
   "message": "详细的错误说明（可选）",
   "rateLimit": {
-    "remaining": 497,
-    "limit": 500,
+    "remaining": 147,
+    "limit": 150,
     "reset": "2025-10-24T00:00:00.000Z"
   }
 }
@@ -73,8 +73,8 @@ export const metadata = {
       "code": "NOT_FOUND",
       "message": "单词 \"studyology\" (en) 尚未生成记忆卡片。请联系管理员或等待后续更新。",
       "rateLimit": {
-        "remaining": 497,
-        "limit": 500,
+        "remaining": 147,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -90,7 +90,7 @@ export const metadata = {
   <Col>
     **原因：**超过每日请求限额
 
-    每个 IP 地址每天有 500 次免费请求。超过此限额后会返回此错误。
+    每个 IP 地址每天有 150 次免费请求。超过此限额后会返回此错误。
 
     **解决方案：**
     - 等待配额重置（每天 UTC 0:00）
@@ -108,7 +108,7 @@ export const metadata = {
       "code": "RATE_LIMIT_EXCEEDED",
       "rateLimit": {
         "remaining": 0,
-        "limit": 500,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -145,8 +145,8 @@ export const metadata = {
       "error": "参数错误：word 参数必须是非空字符串",
       "code": "INVALID_PARAMETER",
       "rateLimit": {
-        "remaining": 496,
-        "limit": 500,
+        "remaining": 146,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -156,7 +156,7 @@ export const metadata = {
 
 ---
 
-### INTERNAL_ERROR {{ tag: '500', label: 'Internal Server Error' }}
+### INTERNAL_ERROR {{ tag: '150', label: 'Internal Server Error' }}
 
 <Row>
   <Col>
@@ -173,7 +173,7 @@ export const metadata = {
     - 实现重试机制（建议指数退避）
   </Col>
   <Col sticky>
-    ```json {{ title: '500 示例' }}
+    ```json {{ title: '150 示例' }}
     {
       "success": false,
       "error": "服务器内部错误",

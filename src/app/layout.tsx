@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: '%s - 单词记忆卡片 API',
     default: '单词记忆卡片 API - 完全公开的单词学习资料查询服务',
   },
-  description: '一个完全公开的单词记忆卡片查询 API，提供例句、词组、助记技巧、词根词缀等丰富内容。无需认证，每天 500 次免费请求。',
+  description: '一个完全公开的单词记忆卡片查询 API，提供例句、词组、助记技巧、词根词缀等丰富内容。无需认证，每天 150 次免费请求。',
 }
 
 export default async function RootLayout({

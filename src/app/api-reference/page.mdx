@@ -30,7 +30,7 @@ export const metadata = {
 
     <Properties>
       <Property name="X-RateLimit-Limit" type="integer">
-        每日总请求限额（默认 500）
+        每日总请求限额（默认 150）
       </Property>
       <Property name="X-RateLimit-Remaining" type="integer">
         今日剩余请求次数
@@ -135,7 +135,7 @@ export const metadata = {
       },
       "rateLimit": {
         "remaining": 499,
-        "limit": 500,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -251,7 +251,7 @@ export const metadata = {
       "message": "单词 \"xyz\" (en) 尚未生成记忆卡片。",
       "rateLimit": {
         "remaining": 497,
-        "limit": 500,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -273,7 +273,7 @@ export const metadata = {
       "code": "RATE_LIMIT_EXCEEDED",
       "rateLimit": {
         "remaining": 0,
-        "limit": 500,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -298,7 +298,7 @@ export const metadata = {
       "code": "INVALID_PARAMETER",
       "rateLimit": {
         "remaining": 496,
-        "limit": 500,
+        "limit": 150,
         "reset": "2025-10-24T00:00:00.000Z"
       }
     }
@@ -306,14 +306,14 @@ export const metadata = {
   </Col>
 </Row>
 
-### 服务器错误 {{ tag: 'INTERNAL_ERROR', label: '500' }}
+### 服务器错误 {{ tag: 'INTERNAL_ERROR', label: '150' }}
 
 <Row>
   <Col>
     服务器内部错误。如果持续遇到此错误，请联系技术支持。
   </Col>
   <Col sticky>
-    ```json {{ title: '500 响应' }}
+    ```json {{ title: '150 响应' }}
     {
       "success": false,
       "error": "服务器内部错误",

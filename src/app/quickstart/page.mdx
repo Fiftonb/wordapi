@@ -8,7 +8,7 @@ export const metadata = {
 本指南将帮助您快速上手单词记忆卡片 API。我们将介绍如何查询单词、处理响应数据，以及如何在不同编程语言中使用 API。{{ className: 'lead' }}
 
 <Note>
-  本 API 完全公开，无需认证即可使用。每个 IP 每天有 500 次免费请求额度。
+  本 API 完全公开，无需认证即可使用。每个 IP 每天有 150 次免费请求额度。
 </Note>
 
 ## 基础查询 {{ id: 'basic-query' }}
@@ -173,8 +173,8 @@ $card = getMemoryCard('hello');
     "cached": true
   },
   "rateLimit": {
-    "remaining": 499,
-    "limit": 500,
+    "remaining": 149,
+    "limit": 150,
     "reset": "2025-10-24T00:00:00.000Z"
   }
 }
@@ -189,7 +189,7 @@ API 可能返回以下错误：
     单词尚未生成记忆卡片，可能是生僻词或尚未收录。
   </Property>
   <Property name="RATE_LIMIT_EXCEEDED (429)">
-    超过每日请求限额（500次），将在第二天 UTC 0:00 重置。
+    超过每日请求限额（150次），将在第二天 UTC 0:00 重置。
   </Property>
   <Property name="INVALID_PARAMETER (400)">
     参数错误，请检查 word 参数是否为有效字符串。
@@ -208,8 +208,8 @@ API 可能返回以下错误：
   "code": "NOT_FOUND",
   "message": "单词 \"xyz\" (en) 尚未生成记忆卡片。请联系管理员或等待后续更新。",
   "rateLimit": {
-    "remaining": 497,
-    "limit": 500,
+    "remaining": 147,
+    "limit": 150,
     "reset": "2025-10-24T00:00:00.000Z"
   }
 }
